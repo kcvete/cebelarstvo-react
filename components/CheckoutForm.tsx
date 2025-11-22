@@ -1,0 +1,419 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Lock, CreditCard } from 'lucide-react';
+
+// Replace with your actual Stripe publishable key
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here';
+
+interface CheckoutFormProps {
+  total: number;
+  onSuccess: () => void;
+  onBack: () => void;
+}
+
+interface ShippingInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+declare global {
+  interface Window {
+    Stripe: any;
+  }
+}
+
+export const CheckoutForm: React.FC<CheckoutFormProps> = ({ total, onSuccess, onBack }) => {
+  const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState('');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripe, setStripe] = useState<any>(null);
+  const [cardElement, setCardElement] = useState<any>(null);
+  const cardMountRef = useRef<HTMLDivElement>(null);
+  
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    postalCode: '',
+    country: 'Slovenija'
+  });
+
+  // Check if Stripe keys are configured
+  const isConfigured = STRIPE_PUBLISHABLE_KEY && !STRIPE_PUBLISHABLE_KEY.includes('your_key_here');
+
+  // Initialize Stripe
+  useEffect(() => {
+    if (!isConfigured) {
+      setError('⚠️ Stripe is not configured. Please add your API keys to the .env file. See STRIPE_SETUP.md for instructions.');
+      return;
+    }
+
+    if (step !== 'payment') return; // Only initialize when on payment step
+
+    if (window.Stripe && !stripe) {
+      const stripeInstance = window.Stripe(STRIPE_PUBLISHABLE_KEY);
+      setStripe(stripeInstance);
+    }
+  }, [isConfigured, step, stripe]);
+
+  // Initialize card element when moving to payment step
+  useEffect(() => {
+    if (!stripe || !cardMountRef.current || cardElement) return;
+
+    // Create card element
+    const elements = stripe.elements();
+    const card = elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#424770',
+          '::placeholder': {
+            color: '#aab7c4',
+          },
+        },
+        invalid: {
+          color: '#9e2146',
+        },
+      },
+    });
+
+    card.mount(cardMountRef.current);
+    setCardElement(card);
+
+    return () => {
+      card.destroy();
+    };
+  }, [stripe, cardElement]);
+
+  useEffect(() => {
+    if (!isConfigured || step !== 'payment') return;
+    
+    // Create PaymentIntent when moving to payment step
+    const createPaymentIntent = async () => {
+      try {
+        console.log('Creating payment intent for amount:', total);
+        const apiUrl = '/api/create-payment-intent';
+        console.log('Fetching:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            amount: Math.round(total * 100),
+            shipping: shippingInfo
+          }),
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server error:', errorText);
+          throw new Error(`Failed to create payment intent: ${response.status} ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('Payment intent created successfully');
+        setClientSecret(data.clientSecret);
+      } catch (err) {
+        console.error('Error creating payment intent:', err);
+        setError(`Unable to initialize payment: ${err instanceof Error ? err.message : 'Please try again later.'}`);
+      }
+    };
+
+    if (total > 0) {
+      createPaymentIntent();
+    }
+  }, [total, isConfigured, step, shippingInfo]);
+
+  const handleShippingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    
+    // Validate shipping info
+    const requiredFields: (keyof ShippingInfo)[] = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'postalCode'];
+    const missingFields = requiredFields.filter(field => !shippingInfo[field]);
+    
+    if (missingFields.length > 0) {
+      setError('Prosimo, izpolnite vsa obvezna polja.');
+      return;
+    }
+    
+    // Dummy API call to save shipping info
+    try {
+      console.log('Saving shipping info:', shippingInfo);
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
+      setStep('payment');
+    } catch (err) {
+      setError('Napaka pri shranjevanju podatkov. Prosimo, poskusite ponovno.');
+    }
+  };
+
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!stripe || !cardElement) {
+      setError('Stripe se še ni naložil. Prosimo, poskusite ponovno.');
+      return;
+    }
+
+    if (!clientSecret) {
+      setError('Plačilo ni pripravljeno. Prosimo, osvežite stran.');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError('');
+
+    try {
+      const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
+            email: shippingInfo.email,
+            phone: shippingInfo.phone,
+            address: {
+              line1: shippingInfo.address,
+              city: shippingInfo.city,
+              postal_code: shippingInfo.postalCode,
+              country: 'SI',
+            },
+          },
+        },
+      });
+
+      if (error) {
+        setError(error.message || 'Prišlo je do napake pri plačilu.');
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Dummy API call to complete order
+        await fetch('/api/complete-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentIntentId: paymentIntent.id,
+            shipping: shippingInfo,
+          }),
+        });
+        onSuccess();
+      } else {
+        setError('Plačilo ni uspelo. Prosimo, poskusite ponovno.');
+      }
+    } catch (err) {
+      setError('Prišlo je do nepričakovane napake. Prosimo, poskusite ponovno.');
+      console.error('Payment error:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const updateShippingInfo = (field: keyof ShippingInfo, value: string) => {
+    setShippingInfo(prev => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-12">
+      <button onClick={onBack} className="mb-6 flex items-center text-stone-500 hover:text-stone-900 transition-colors">
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        Nazaj na košarico
+      </button>
+
+      {/* Progress Steps */}
+      <div className="mb-8 flex items-center justify-center gap-4">
+        <div className={`flex items-center gap-2 ${step === 'shipping' ? 'text-gold-600' : 'text-stone-400'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+            step === 'shipping' ? 'bg-gold-600 text-white' : 'bg-stone-200'
+          }`}>1</div>
+          <span className="font-medium">Dostava</span>
+        </div>
+        <div className="h-px w-12 bg-stone-300" />
+        <div className={`flex items-center gap-2 ${step === 'payment' ? 'text-gold-600' : 'text-stone-400'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+            step === 'payment' ? 'bg-gold-600 text-white' : 'bg-stone-200'
+          }`}>2</div>
+          <span className="font-medium">Plačilo</span>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden">
+        <div className="bg-stone-900 p-6 text-white">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            {step === 'shipping' ? <Lock className="w-5 h-5 text-green-400" /> : <CreditCard className="w-5 h-5 text-green-400" />}
+            {step === 'shipping' ? 'Podatki za dostavo' : 'Varne plačilo'}
+          </h2>
+          <p className="text-stone-400 text-sm mt-1">
+            {step === 'shipping' ? 'Korak 1 od 2' : 'Powered by Stripe'}
+          </p>
+        </div>
+
+        <div className="p-8">
+          <div className="mb-8 pb-6 border-b border-stone-100">
+            <p className="text-sm text-stone-500 uppercase tracking-wide font-bold">Skupaj za plačilo</p>
+            <p className="text-4xl font-bold text-gold-600 mt-2">{total.toFixed(2)} €</p>
+          </div>
+
+          {step === 'shipping' ? (
+            <form onSubmit={handleShippingSubmit} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">Ime *</label>
+                  <input
+                    type="text"
+                    required
+                    value={shippingInfo.firstName}
+                    onChange={(e) => updateShippingInfo('firstName', e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Janez"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">Priimek *</label>
+                  <input
+                    type="text"
+                    required
+                    value={shippingInfo.lastName}
+                    onChange={(e) => updateShippingInfo('lastName', e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Novak"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">E-pošta *</label>
+                <input
+                  type="email"
+                  required
+                  value={shippingInfo.email}
+                  onChange={(e) => updateShippingInfo('email', e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition-all"
+                  placeholder="janez.novak@primer.si"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Telefon *</label>
+                <input
+                  type="tel"
+                  required
+                  value={shippingInfo.phone}
+                  onChange={(e) => updateShippingInfo('phone', e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition-all"
+                  placeholder="+386 40 123 456"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Naslov *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingInfo.address}
+                  onChange={(e) => updateShippingInfo('address', e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition-all"
+                  placeholder="Ulica 123"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">Mesto *</label>
+                  <input
+                    type="text"
+                    required
+                    value={shippingInfo.city}
+                    onChange={(e) => updateShippingInfo('city', e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Ljubljana"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">Poštna številka *</label>
+                  <input
+                    type="text"
+                    required
+                    value={shippingInfo.postalCode}
+                    onChange={(e) => updateShippingInfo('postalCode', e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition-all"
+                    placeholder="1000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Država *</label>
+                <input
+                  type="text"
+                  required
+                  value={shippingInfo.country}
+                  onChange={(e) => updateShippingInfo('country', e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-stone-300 focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition-all bg-stone-50"
+                  placeholder="Slovenija"
+                />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center py-4 px-6 rounded-lg text-white font-bold text-lg shadow-lg transition-all transform hover:scale-[1.02] bg-stone-900 hover:bg-stone-800"
+              >
+                Naprej na plačilo
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handlePaymentSubmit} className="space-y-6">
+              <div className="bg-stone-50 p-4 rounded-lg mb-6">
+                <p className="text-sm font-medium text-stone-700 mb-2">Dostava na:</p>
+                <p className="text-stone-900 font-medium">{shippingInfo.firstName} {shippingInfo.lastName}</p>
+                <p className="text-stone-600 text-sm">{shippingInfo.address}</p>
+                <p className="text-stone-600 text-sm">{shippingInfo.postalCode} {shippingInfo.city}</p>
+                <button
+                  type="button"
+                  onClick={() => setStep('shipping')}
+                  className="text-gold-600 text-sm font-medium hover:underline mt-2"
+                >
+                  Uredi podatke
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Podatki o kartici</label>
+                <div ref={cardMountRef} className="p-4 border border-stone-300 rounded-lg" />
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isProcessing || !stripe || !cardElement}
+                className={`w-full flex items-center justify-center py-4 px-6 rounded-lg text-white font-bold text-lg shadow-lg transition-all transform hover:scale-[1.02] ${
+                  isProcessing ? 'bg-stone-400 cursor-not-allowed' : 'bg-stone-900 hover:bg-stone-800'
+                }`}
+              >
+                {isProcessing ? 'Obdelava...' : `Plačaj ${total.toFixed(2)} €`}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
