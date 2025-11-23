@@ -390,6 +390,7 @@ function App() {
         {view === 'home' && renderHome()}
         {view === 'checkout' && (
           <CheckoutForm 
+            cart={cart}
             total={cartTotal} 
             onSuccess={handleCheckoutSuccess}
             onBack={() => setView('home')}

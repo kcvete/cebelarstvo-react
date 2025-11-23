@@ -33,22 +33,28 @@ View your app in AI Studio: https://ai.studio/apps/temp/2
 
 ## Stripe Payment Integration (Optional)
 
-This app includes Stripe checkout functionality. To enable payments:
+This app includes Stripe Checkout functionality via Cloudflare Workers. To enable payments:
 
-1. **Get Stripe API keys** from https://dashboard.stripe.com/apikeys
-2. **Add keys to `.env`** (see step 2 above)
-3. **Verify setup**:
-   ```bash
-   node verify-stripe-setup.js
-   ```
-4. **Install backend dependencies**:
-   ```bash
-   npm install express stripe cors dotenv
-   ```
-5. **Start the payment server** (in a new terminal):
-   ```bash
-   node server-example.js
-   ```
-6. **Test with Stripe test card**: `4242 4242 4242 4242`
+1. **Set up Stripe Products**:
+   - Go to https://dashboard.stripe.com/products
+   - Create products for each honey type
+   - Copy the Price IDs (start with `price_...`)
+   - Update `constants.ts` with your Price IDs
 
-For detailed Stripe setup instructions, see [STRIPE_SETUP.md](STRIPE_SETUP.md).
+2. **Deploy Cloudflare Worker**:
+   - Follow the detailed guide in [CLOUDFLARE_WORKER_SETUP.md](CLOUDFLARE_WORKER_SETUP.md)
+   - Copy code from `cloudflare-worker.js`
+   - Set up your Stripe Secret Key as environment variable
+
+3. **Configure your `.env`**:
+   ```env
+   VITE_STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_KEY
+   VITE_CLOUDFLARE_WORKER_URL=https://your-worker.workers.dev
+   VITE_GEMINI_API_KEY=your_gemini_key
+   ```
+
+4. **Test with Stripe test card**: `4242 4242 4242 4242`
+
+For detailed setup instructions, see:
+- [CLOUDFLARE_WORKER_SETUP.md](CLOUDFLARE_WORKER_SETUP.md) - Complete setup guide
+- [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - What changed and why

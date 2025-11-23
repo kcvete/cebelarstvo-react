@@ -8,10 +8,11 @@ export const PRODUCTS: Product[] = [
       name: 'Cvetlični med',
       price: 12.00,
       description: 'Naravni slovenski cvetlični med, pridelan iz nektarja različnih cvetov. Blag, aromatičen in vsestransko uporaben.',
-      image: '/cvetlicni.jpg',
+      image: '/cvetlicni.png',
       tags: ['Naravni', 'Aromatičen', 'Slovenski'],
       rating: 4.9,
-      reviews: 128
+      reviews: 128,
+      priceId: 'price_1SWOBhI5iqAVuGDVcHriXpGk' // Replace with your actual Stripe Price ID
     },
     {
       id: 'lipov',
@@ -22,7 +23,8 @@ export const PRODUCTS: Product[] = [
       image: '/Lipov-store.jpg',
       tags: ['Lipa', 'Svež', 'Slovenski'],
       rating: 4.8,
-      reviews: 210
+      reviews: 210,
+      priceId: 'price_1SWMxhI5iqAVuGDVZixLNmLi' // Replace with your actual Stripe Price ID
     },
     {
       id: 'hojev',
@@ -33,7 +35,8 @@ export const PRODUCTS: Product[] = [
       tags: ['Hoja', 'Intenziven', 'Slovenski', 'Ni na zalogi'],
       rating: 4.7,
       reviews: 85,
-      soldOut: true
+      soldOut: true,
+      priceId: 'price_hojev_med' // Replace with your actual Stripe Price ID
     }
   ];
 

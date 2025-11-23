@@ -9,6 +9,7 @@ export interface Product {
   rating: number;
   reviews: number;
   soldOut?: boolean;
+  priceId?: string; // Stripe Price ID for Checkout Sessions
 }
 
 export interface CartItem extends Product {

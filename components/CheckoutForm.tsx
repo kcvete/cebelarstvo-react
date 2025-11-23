@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Lock, CreditCard } from 'lucide-react';
+import { CartItem } from '../types';
 
-// Replace with your actual Stripe publishable key
+// Stripe publishable key and Cloudflare Worker URL from environment
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here';
+const CLOUDFLARE_WORKER_URL = import.meta.env.VITE_CLOUDFLARE_WORKER_URL || 'https://honey-shop-backend.YOUR_SUBDOMAIN.workers.dev';
 
 interface CheckoutFormProps {
+  cart: CartItem[];
   total: number;
   onSuccess: () => void;
   onBack: () => void;
@@ -27,14 +30,11 @@ declare global {
   }
 }
 
-export const CheckoutForm: React.FC<CheckoutFormProps> = ({ total, onSuccess, onBack }) => {
+export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, total, onSuccess, onBack }) => {
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripe, setStripe] = useState<any>(null);
-  const [cardElement, setCardElement] = useState<any>(null);
-  const cardMountRef = useRef<HTMLDivElement>(null);
   
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     firstName: '',
@@ -47,93 +47,25 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ total, onSuccess, on
     country: 'Slovenija'
   });
 
-  // Check if Stripe keys are configured
-  const isConfigured = STRIPE_PUBLISHABLE_KEY && !STRIPE_PUBLISHABLE_KEY.includes('your_key_here');
+  // Check if Stripe and Worker are configured
+  const isConfigured = 
+    STRIPE_PUBLISHABLE_KEY && 
+    !STRIPE_PUBLISHABLE_KEY.includes('your_key_here') &&
+    CLOUDFLARE_WORKER_URL &&
+    !CLOUDFLARE_WORKER_URL.includes('YOUR_SUBDOMAIN');
 
   // Initialize Stripe
   useEffect(() => {
     if (!isConfigured) {
-      setError('⚠️ Stripe is not configured. Please add your API keys to the .env file. See STRIPE_SETUP.md for instructions.');
+      setError('⚠️ Stripe is not configured. Please add your API keys and Cloudflare Worker URL to the .env file.');
       return;
     }
-
-    if (step !== 'payment') return; // Only initialize when on payment step
 
     if (window.Stripe && !stripe) {
       const stripeInstance = window.Stripe(STRIPE_PUBLISHABLE_KEY);
       setStripe(stripeInstance);
     }
-  }, [isConfigured, step, stripe]);
-
-  // Initialize card element when moving to payment step
-  useEffect(() => {
-    if (!stripe || !cardMountRef.current || cardElement) return;
-
-    // Create card element
-    const elements = stripe.elements();
-    const card = elements.create('card', {
-      style: {
-        base: {
-          fontSize: '16px',
-          color: '#424770',
-          '::placeholder': {
-            color: '#aab7c4',
-          },
-        },
-        invalid: {
-          color: '#9e2146',
-        },
-      },
-    });
-
-    card.mount(cardMountRef.current);
-    setCardElement(card);
-
-    return () => {
-      card.destroy();
-    };
-  }, [stripe, cardElement]);
-
-  useEffect(() => {
-    if (!isConfigured || step !== 'payment') return;
-    
-    // Create PaymentIntent when moving to payment step
-    const createPaymentIntent = async () => {
-      try {
-        console.log('Creating payment intent for amount:', total);
-        const apiUrl = '/api/create-payment-intent';
-        console.log('Fetching:', apiUrl);
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            amount: Math.round(total * 100),
-            shipping: shippingInfo
-          }),
-        });
-        
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Server error:', errorText);
-          throw new Error(`Failed to create payment intent: ${response.status} ${errorText}`);
-        }
-        
-        const data = await response.json();
-        console.log('Payment intent created successfully');
-        setClientSecret(data.clientSecret);
-      } catch (err) {
-        console.error('Error creating payment intent:', err);
-        setError(`Unable to initialize payment: ${err instanceof Error ? err.message : 'Please try again later.'}`);
-      }
-    };
-
-    if (total > 0) {
-      createPaymentIntent();
-    }
-  }, [total, isConfigured, step, shippingInfo]);
+  }, [isConfigured, stripe]);
 
   const handleShippingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,26 +80,23 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ total, onSuccess, on
       return;
     }
     
-    // Dummy API call to save shipping info
-    try {
-      console.log('Saving shipping info:', shippingInfo);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-      setStep('payment');
-    } catch (err) {
-      setError('Napaka pri shranjevanju podatkov. Prosimo, poskusite ponovno.');
-    }
+    // Move to payment step
+    setStep('payment');
   };
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!stripe || !cardElement) {
+    if (!stripe) {
       setError('Stripe se še ni naložil. Prosimo, poskusite ponovno.');
       return;
     }
 
-    if (!clientSecret) {
-      setError('Plačilo ni pripravljeno. Prosimo, osvežite stran.');
+    // Validate that all cart items have price IDs
+    const itemsWithoutPriceId = cart.filter(item => !item.priceId);
+    if (itemsWithoutPriceId.length > 0) {
+      setError('Nekateri izdelki še nimajo nastavljenih cen v Stripe. Prosimo, kontaktirajte podporo.');
+      console.error('Items without priceId:', itemsWithoutPriceId);
       return;
     }
 
@@ -175,42 +104,46 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ total, onSuccess, on
     setError('');
 
     try {
-      const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
-            email: shippingInfo.email,
-            phone: shippingInfo.phone,
-            address: {
-              line1: shippingInfo.address,
-              city: shippingInfo.city,
-              postal_code: shippingInfo.postalCode,
-              country: 'SI',
-            },
-          },
-        },
+      // Prepare cart items in the format expected by Cloudflare Worker
+      const cartItems = cart.map(item => ({
+        priceId: item.priceId!,
+        quantity: item.quantity
+      }));
+
+      console.log('Calling Cloudflare Worker:', CLOUDFLARE_WORKER_URL);
+      console.log('Cart items:', cartItems);
+
+      // Call Cloudflare Worker to create Stripe Checkout Session
+      const response = await fetch(CLOUDFLARE_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cartItems })
       });
 
-      if (error) {
-        setError(error.message || 'Prišlo je do napake pri plačilu.');
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        // Dummy API call to complete order
-        await fetch('/api/complete-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            paymentIntentId: paymentIntent.id,
-            shipping: shippingInfo,
-          }),
-        });
-        onSuccess();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Worker error:', errorText);
+        throw new Error(`Failed to create checkout session: ${response.status}`);
+      }
+
+      const session = await response.json();
+      console.log('Session created:', session);
+
+      if (session.id) {
+        // Redirect to Stripe Checkout
+        const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+        
+        if (error) {
+          setError(error.message || 'Prišlo je do napake pri preusmeritvi na plačilo.');
+        }
+        // If redirect is successful, user will leave the page
       } else {
-        setError('Plačilo ni uspelo. Prosimo, poskusite ponovno.');
+        console.error('No session ID returned:', session);
+        setError('Ni bilo mogoče ustvariti plačilne seje. Prosimo, poskusite ponovno.');
       }
     } catch (err) {
       setError('Prišlo je do nepričakovane napake. Prosimo, poskusite ponovno.');
-      console.error('Payment error:', err);
+      console.error('Checkout error:', err);
     } finally {
       setIsProcessing(false);
     }
@@ -248,7 +181,7 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ total, onSuccess, on
         <div className="bg-stone-900 p-6 text-white">
           <h2 className="text-xl font-bold flex items-center gap-2">
             {step === 'shipping' ? <Lock className="w-5 h-5 text-green-400" /> : <CreditCard className="w-5 h-5 text-green-400" />}
-            {step === 'shipping' ? 'Podatki za dostavo' : 'Varne plačilo'}
+            {step === 'shipping' ? 'Podatki za dostavo' : 'Varno plačilo'}
           </h2>
           <p className="text-stone-400 text-sm mt-1">
             {step === 'shipping' ? 'Korak 1 od 2' : 'Powered by Stripe'}
@@ -390,9 +323,24 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ total, onSuccess, on
                 </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Podatki o kartici</label>
-                <div ref={cardMountRef} className="p-4 border border-stone-300 rounded-lg" />
+              {/* Order Summary */}
+              <div className="bg-stone-50 p-4 rounded-lg mb-6">
+                <p className="text-sm font-medium text-stone-700 mb-3">Vaše naročilo:</p>
+                <div className="space-y-2">
+                  {cart.map(item => (
+                    <div key={item.id} className="flex justify-between text-sm">
+                      <span className="text-stone-600">{item.name} × {item.quantity}</span>
+                      <span className="text-stone-900 font-medium">{(item.price * item.quantity).toFixed(2)} €</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  <CreditCard className="w-4 h-4 inline mr-2" />
+                  Ko kliknete "Nadaljuj na plačilo", boste preusmerjeni na varno Stripe plačilno stran.
+                </p>
               </div>
 
               {error && (
@@ -403,12 +351,12 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ total, onSuccess, on
 
               <button
                 type="submit"
-                disabled={isProcessing || !stripe || !cardElement}
+                disabled={isProcessing || !stripe}
                 className={`w-full flex items-center justify-center py-4 px-6 rounded-lg text-white font-bold text-lg shadow-lg transition-all transform hover:scale-[1.02] ${
                   isProcessing ? 'bg-stone-400 cursor-not-allowed' : 'bg-stone-900 hover:bg-stone-800'
                 }`}
               >
-                {isProcessing ? 'Obdelava...' : `Plačaj ${total.toFixed(2)} €`}
+                {isProcessing ? 'Preusmerjanje...' : `Nadaljuj na plačilo (${total.toFixed(2)} €)`}
               </button>
             </form>
           )}
