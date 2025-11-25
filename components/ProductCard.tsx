@@ -17,8 +17,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd }) => {
       <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-stone-200 group-hover:opacity-90 lg:aspect-none lg:h-80 relative">
         <img
           src={product.image}
-          alt={product.name}
+          alt={`${product.name} - slovenski domači med iz Ljubljane in Ajdovščine`}
           className="h-full w-full object-cover object-center lg:h-full lg:w-full transition-transform duration-500 group-hover:scale-110"
+          loading="lazy"
         />
         {product.previousPrice && (
           <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-md font-bold text-sm shadow-lg">
@@ -38,10 +39,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd }) => {
                 </h3>
                 <div className="flex flex-col items-end">
                   {product.previousPrice && (
-                    <p className="text-sm text-stone-400 line-through">${product.previousPrice.toFixed(2)}</p>
+                    <p className="text-sm text-stone-400 line-through">{product.previousPrice.toFixed(2)} €</p>
                   )}
                   <p className={`text-lg font-semibold ${product.previousPrice ? 'text-red-600' : 'text-gold-700'}`}>
-                    ${product.price.toFixed(2)}
+                    {product.price.toFixed(2)} €
                   </p>
                   {product.previousPrice && (
                     <p className="text-xs font-bold text-red-600">

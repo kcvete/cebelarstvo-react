@@ -141,32 +141,46 @@ function App() {
                     <h2 className="text-xl font-bold font-serif text-white">GoldenDrop</h2>
                 </div>
                 <p className="text-sm leading-relaxed text-stone-400">
-                    Delivering the purest, ethically harvested honey straight from the hive to your home. 
+                    Domače čebelarstvo iz Ljubljane in Ajdovščine. Vrhunski slovenski med - cvetlični, lipov in hojev. 100% naraven, direktno od čebelarja.
+                </p>
+                <address className="text-sm text-stone-400 mt-4 not-italic">
+                    <p>Ljubljana / Ajdovščina, Slovenija</p>
+                    <p className="mt-1">
+                        <a href="mailto:info@goldendrop.si" className="hover:text-gold-500">info@goldendrop.si</a>
+                    </p>
+                </address>
+            </div>
+            <div>
+                <h3 className="text-white font-bold mb-4">Trgovina</h3>
+                <ul className="space-y-2 text-sm">
+                    <li><a href="#shop-section" className="hover:text-gold-500">Cvetlični med</a></li>
+                    <li><a href="#shop-section" className="hover:text-gold-500">Lipov med</a></li>
+                    <li><a href="#shop-section" className="hover:text-gold-500">Hojev med</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 className="text-white font-bold mb-4">O nas</h3>
+                <ul className="space-y-2 text-sm">
+                    <li><a href="#" className="hover:text-gold-500">Naša zgodba</a></li>
+                    <li><a href="#" className="hover:text-gold-500">Trajnostno čebelarjenje</a></li>
+                    <li><a href="#" className="hover:text-gold-500">Kontakt</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3 className="text-white font-bold mb-4">Povežimo se</h3>
+                <div className="flex gap-4">
+                    <a href="#" aria-label="Facebook" className="hover:text-gold-500"><Github className="w-5 h-5 cursor-pointer" /></a>
+                    <a href="#" aria-label="Instagram" className="hover:text-gold-500"><Twitter className="w-5 h-5 cursor-pointer" /></a>
+                </div>
+                <p className="text-sm text-stone-400 mt-4">
+                    Dostava po vsej Sloveniji.<br/>Brezplačna poštnina nad 50 €.
                 </p>
             </div>
-            <div>
-                <h3 className="text-white font-bold mb-4">Shop</h3>
-                <ul className="space-y-2 text-sm">
-                    <li><a href="#" className="hover:text-gold-500">Raw Honey</a></li>
-                    <li><a href="#" className="hover:text-gold-500">Manuka</a></li>
-                    <li><a href="#" className="hover:text-gold-500">Gift Sets</a></li>
-                </ul>
-            </div>
-            <div>
-                <h3 className="text-white font-bold mb-4">Company</h3>
-                <ul className="space-y-2 text-sm">
-                    <li><a href="#" className="hover:text-gold-500">About Us</a></li>
-                    <li><a href="#" className="hover:text-gold-500">Sustainability</a></li>
-                    <li><a href="#" className="hover:text-gold-500">Contact</a></li>
-                </ul>
-            </div>
-            <div>
-                <h3 className="text-white font-bold mb-4">Connect</h3>
-                <div className="flex gap-4">
-                    <Github className="w-5 h-5 hover:text-gold-500 cursor-pointer" />
-                    <Twitter className="w-5 h-5 hover:text-gold-500 cursor-pointer" />
-                </div>
-            </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-stone-800">
+            <p className="text-sm text-stone-500 text-center">
+                © {new Date().getFullYear()} GoldenDrop Čebelarstvo. Vse pravice pridržane. | Slovenski domači med iz Ljubljane in Ajdovščine
+            </p>
         </div>
     </footer>
   );
@@ -289,13 +303,13 @@ function App() {
       </section>
 
       {/* Products Grid */}
-      <section id="shop-section" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="shop-section" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Naši izdelki">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h2 className="text-3xl font-bold text-stone-900 font-serif sm:text-4xl">
-            Pridelano iz srca narave
+            Slovenski domači med - naša ponudba
           </h2>
           <p className="mt-4 text-lg text-stone-500">
-            Izberite med našo ponudbo vrhunskih, etično pridelanih medov. Vsak kozarec pripoveduje zgodbo svojega izvora.
+            Izberite med našo ponudbo vrhunskega slovenskega medu iz Ljubljane in Ajdovščine. Vsak kozarec je 100% naraven, nefiltriran in pridelan s trajnostnim čebelarjenjem.
           </p>
         </div>
 
