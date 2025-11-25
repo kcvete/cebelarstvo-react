@@ -1,5 +1,6 @@
 import { Product } from './types';
 
+export const SITE_NAME = 'Čebelarstvo Tomaž';
 export const STRIPE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
 
 export const PRODUCTS: Product[] = [

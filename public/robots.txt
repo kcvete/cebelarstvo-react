@@ -1,11 +1,11 @@
-# Robots.txt za GoldenDrop - Slovenski domači med
-# https://goldendrop.si
+# Robots.txt za Čebelarstvo Tomaž - Slovenski domači med
+# https://cebelarstvo-tomaz.si
 
 User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://goldendrop.si/sitemap.xml
+Sitemap: https://cebelarstvo-tomaz.si/sitemap.xml
 
 # Disallow admin/private areas (add paths as needed)
 Disallow: /api/

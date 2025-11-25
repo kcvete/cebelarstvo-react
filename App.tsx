@@ -106,7 +106,7 @@ function App() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('home')}>
           <span className="text-2xl">🍯</span>
-          <h1 className="text-xl font-bold font-serif text-stone-900">GoldenDrop</h1>
+          <h1 className="text-xl font-bold font-serif text-stone-900">Čebelarstvo Tomaž</h1>
         </div>
         
         <div className="flex items-center gap-6">
@@ -138,15 +138,15 @@ function App() {
             <div className="col-span-1 md:col-span-1">
                 <div className="flex items-center gap-2 mb-4">
                     <span className="text-2xl">🍯</span>
-                    <h2 className="text-xl font-bold font-serif text-white">GoldenDrop</h2>
+                    <h2 className="text-xl font-bold font-serif text-white">Čebelarstvo Tomaž</h2>
                 </div>
                 <p className="text-sm leading-relaxed text-stone-400">
-                    Domače čebelarstvo iz Ljubljane in Ajdovščine. Vrhunski slovenski med - cvetlični, lipov in hojev. 100% naraven, direktno od čebelarja.
+                    Domače čebelarstvo iz Vipavske doline in Banjške planote. Vrhunski slovenski med - cvetlični, lipov in hojev. 100% naraven, direktno od čebelarja.
                 </p>
                 <address className="text-sm text-stone-400 mt-4 not-italic">
-                    <p>Ljubljana / Ajdovščina, Slovenija</p>
+                    <p>Vipavska dolina / Banjška planota, Slovenija</p>
                     <p className="mt-1">
-                        <a href="mailto:info@goldendrop.si" className="hover:text-gold-500">info@goldendrop.si</a>
+                        <a href="mailto:info@cebelarstvo-tomaz.si" className="hover:text-gold-500">info@cebelarstvo-tomaz.si</a>
                     </p>
                 </address>
             </div>
@@ -179,7 +179,7 @@ function App() {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-stone-800">
             <p className="text-sm text-stone-500 text-center">
-                © {new Date().getFullYear()} GoldenDrop Čebelarstvo. Vse pravice pridržane. | Slovenski domači med iz Ljubljane in Ajdovščine
+                © {new Date().getFullYear()} Čebelarstvo Tomaž. Vse pravice pridržane. | Slovenski domači med iz Vipavske doline in Banjške planote
             </p>
         </div>
     </footer>
@@ -309,7 +309,7 @@ function App() {
             Slovenski domači med - naša ponudba
           </h2>
           <p className="mt-4 text-lg text-stone-500">
-            Izberite med našo ponudbo vrhunskega slovenskega medu iz Ljubljane in Ajdovščine. Vsak kozarec je 100% naraven, nefiltriran in pridelan s trajnostnim čebelarjenjem.
+            Izberite med našo ponudbo vrhunskega slovenskega medu iz Vipavske doline in Banjške planote. Vsak kozarec je 100% naraven, nefiltriran in pridelan s trajnostnim čebelarjenjem.
           </p>
         </div>
 

@@ -14,10 +14,10 @@ export const Hero: React.FC<HeroProps> = ({ scrollToShop }) => {
             <div className="sm:text-center lg:text-left">
               <h1 className="text-4xl tracking-tight font-extrabold text-stone-900 sm:text-5xl md:text-6xl">
                 <span className="block xl:inline">Domači slovenski med</span>{' '}
-                <span className="block text-gold-600 xl:inline">iz Ljubljane in Ajdovščine</span>
+                <span className="block text-gold-600 xl:inline">iz Vipavske doline</span>
               </h1>
               <p className="mt-3 text-base text-stone-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0 font-serif">
-                100% naraven, nefiltriran in nepasteriziran med direktno od slovenskega čebelarja. Cvetlični, lipov in hojev med - ročno točen iz trajnostnih panjev.
+                100% naraven, nefiltriran in nepasteriziran med iz Vipavske doline in Banjške planote. Cvetlični, lipov in hojev med - ročno točen iz trajnostnih panjev.
               </p>
               <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start gap-4">
                 <div className="rounded-md shadow">

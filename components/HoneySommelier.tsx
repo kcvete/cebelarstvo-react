@@ -7,7 +7,7 @@ export const HoneySommelier: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'model', text: "Hi! I'm the GoldenDrop AI Sommelier. Tell me what you're eating (e.g., 'Greek yogurt' or 'sharp cheddar'), and I'll pair the perfect honey!" }
+    { role: 'model', text: "Živijo! Sem AI Medeni Sommelier pri Čebelarstvu Tomaž. Povej mi, kaj ješ (npr. 'jogurt' ali 'sir'), in ti bom priporočil popoln med!" }
   ]);
   const [loading, setLoading] = useState(false);
 

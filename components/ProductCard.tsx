@@ -17,7 +17,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd }) => {
       <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-stone-200 group-hover:opacity-90 lg:aspect-none lg:h-80 relative">
         <img
           src={product.image}
-          alt={`${product.name} - slovenski domači med iz Ljubljane in Ajdovščine`}
+          alt={`${product.name} - slovenski domači med iz Vipavske doline`}
           className="h-full w-full object-cover object-center lg:h-full lg:w-full transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
         />
