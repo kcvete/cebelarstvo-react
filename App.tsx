@@ -4,6 +4,7 @@ import { Hero } from './components/Hero';
 import { ProductCard } from './components/ProductCard';
 import { CheckoutForm } from './components/CheckoutForm';
 import { HoneySommelier } from './components/HoneySommelier';
+import { OurStory } from './components/OurStory';
 import { PRODUCTS, TESTIMONIALS } from './constants';
 import { CartItem, Product, ViewState } from './types';
 
@@ -112,7 +113,7 @@ function App() {
         <div className="flex items-center gap-6">
           <nav className="hidden md:flex gap-6 text-sm font-medium text-stone-600">
             <button onClick={() => { setView('home'); setTimeout(scrollToProducts, 100); }} className="hover:text-gold-600 transition-colors">Trgovina</button>
-            <button className="hover:text-gold-600 transition-colors">Naša zgodba</button>
+            <button onClick={() => { setView('story'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Naša zgodba</button>
             <button className="hover:text-gold-600 transition-colors">Blog</button>
           </nav>
 
@@ -161,7 +162,7 @@ function App() {
             <div>
                 <h3 className="text-white font-bold mb-4">O nas</h3>
                 <ul className="space-y-2 text-sm">
-                    <li><a href="#" className="hover:text-gold-500">Naša zgodba</a></li>
+                    <li><button onClick={() => { setView('story'); window.scrollTo(0, 0); }} className="hover:text-gold-500">Naša zgodba</button></li>
                     <li><a href="#" className="hover:text-gold-500">Trajnostno čebelarjenje</a></li>
                     <li><a href="#" className="hover:text-gold-500">Kontakt</a></li>
                 </ul>
@@ -402,6 +403,11 @@ function App() {
       
       <main>
         {view === 'home' && renderHome()}
+        {view === 'story' && (
+          <OurStory 
+            onShopClick={() => { setView('home'); setTimeout(scrollToProducts, 100); }}
+          />
+        )}
         {view === 'checkout' && (
           <CheckoutForm 
             cart={cart}
