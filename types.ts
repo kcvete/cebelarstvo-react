@@ -21,4 +21,16 @@ export interface ChatMessage {
   text: string;
 }
 
-export type ViewState = 'home' | 'checkout' | 'success' | 'story';
+export interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  image: string;
+  category: string;
+  author: string;
+  date: string;
+  readTime: string;
+}
+
+export type ViewState = 'home' | 'checkout' | 'success' | 'story' | 'blog' | 'blogPost';

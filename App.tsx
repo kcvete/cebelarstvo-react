@@ -4,8 +4,9 @@ import { Hero } from './components/Hero';
 import { ProductCard } from './components/ProductCard';
 import { CheckoutForm } from './components/CheckoutForm';
 import { OurStory } from './components/OurStory';
+import { BlogList, BlogPostView } from './components/Blog';
 import { PRODUCTS, TESTIMONIALS } from './constants';
-import { CartItem, Product, ViewState } from './types';
+import { CartItem, Product, ViewState, BlogPost } from './types';
 
 // Helper icon for testimonials - Defined outside to correctly type props including key support in JSX
 const StarIcon = ({ filled }: { filled: boolean }) => (
@@ -19,6 +20,7 @@ function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null);
 
   // Handle URL-based routing (for Stripe redirects)
   useEffect(() => {
@@ -129,7 +131,7 @@ function App() {
           <nav className="hidden md:flex gap-6 text-sm font-medium text-stone-600">
             <button onClick={() => { setView('home'); setTimeout(scrollToProducts, 100); }} className="hover:text-gold-600 transition-colors">Trgovina</button>
             <button onClick={() => { setView('story'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Naša zgodba</button>
-            <button className="hover:text-gold-600 transition-colors">Blog</button>
+            <button onClick={() => { setView('blog'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Blog</button>
           </nav>
 
           <button
@@ -432,6 +434,17 @@ function App() {
           />
         )}
         {view === 'success' && renderSuccess()}
+        {view === 'blog' && (
+          <BlogList 
+            onSelectPost={(post) => { setSelectedBlogPost(post); setView('blogPost'); window.scrollTo(0, 0); }}
+          />
+        )}
+        {view === 'blogPost' && selectedBlogPost && (
+          <BlogPostView 
+            post={selectedBlogPost}
+            onBack={() => { setView('blog'); window.scrollTo(0, 0); }}
+          />
+        )}
       </main>
 
       {renderFooter()}
