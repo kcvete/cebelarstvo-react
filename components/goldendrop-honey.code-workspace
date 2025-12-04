@@ -5,6 +5,12 @@
 		},
 		{
 			"path": "../../cebelarstvo-api"
+		},
+		{
+			"path": "../../Crawler"
+		},
+		{
+			"path": "../../CleanDesign"
 		}
 	]
 }

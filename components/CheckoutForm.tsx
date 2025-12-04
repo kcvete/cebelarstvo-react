@@ -1,10 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Lock, CreditCard } from 'lucide-react';
+import { ArrowLeft, Lock, CreditCard, Zap } from 'lucide-react';
 import { CartItem } from '../types';
 
 // Stripe publishable key and Cloudflare Worker URL from environment
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key_here';
 const CLOUDFLARE_WORKER_URL = import.meta.env.VITE_CLOUDFLARE_WORKER_URL || 'https://honey-shop-backend.YOUR_SUBDOMAIN.workers.dev';
+
+// Brevo (Sendinblue) configuration
+const BREVO_API_KEY = import.meta.env.VITE_BREVO_API_KEY || '';
+const ORDER_NOTIFICATION_EMAIL = import.meta.env.VITE_ORDER_NOTIFICATION_EMAIL || 'info@cebelarstvo-tomaz.si';
+const BREVO_SENDER_EMAIL = import.meta.env.VITE_BREVO_SENDER_EMAIL || 'aneja.fu@gmail.com';
+const BREVO_SENDER_NAME = import.meta.env.VITE_BREVO_SENDER_NAME || 'Čebelarstvo Tomaž';
+
+// Check if we're in test/dev mode (Stripe test key starts with pk_test_)
+const IS_TEST_MODE = STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_') || import.meta.env.DEV;
+
+// Test price ID for test mode - use this for all products when testing
+const TEST_PRICE_ID = 'price_1SYuSEIVhqY1p0l8HVT98w3x';
+
+// Test data for prefilling the form
+const TEST_DATA: ShippingInfo = {
+  firstName: 'Janez',
+  lastName: 'Novak',
+  email: 'janez.test@example.com',
+  phone: '+386 40 123 456',
+  address: 'Testna ulica 42',
+  city: 'Ljubljana',
+  postalCode: '1000',
+  country: 'Slovenija'
+};
 
 interface CheckoutFormProps {
   cart: CartItem[];
@@ -54,6 +78,70 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, total, onSucce
     CLOUDFLARE_WORKER_URL &&
     !CLOUDFLARE_WORKER_URL.includes('YOUR_SUBDOMAIN');
 
+  // Send order notification email via Brevo
+  const sendOrderNotificationEmail = async () => {
+    if (!BREVO_API_KEY) {
+      console.warn('Brevo API key not configured, skipping email notification');
+      return;
+    }
+
+    const orderItems = cart.map(item => 
+      `• ${item.name} x ${item.quantity} - ${(item.price * item.quantity).toFixed(2)} €`
+    ).join('\n');
+
+    const emailContent = `
+Nova naročilnica - Čebelarstvo Tomaž
+
+PODATKI ZA DOSTAVO:
+-------------------
+Ime: ${shippingInfo.firstName} ${shippingInfo.lastName}
+E-pošta: ${shippingInfo.email}
+Telefon: ${shippingInfo.phone}
+Naslov: ${shippingInfo.address}
+Mesto: ${shippingInfo.postalCode} ${shippingInfo.city}
+Država: ${shippingInfo.country}
+
+NAROČENI IZDELKI:
+-----------------
+${orderItems}
+
+SKUPAJ: ${total.toFixed(2)} €
+
+---
+Naročilo oddano: ${new Date().toLocaleString('sl-SI')}
+${IS_TEST_MODE ? '⚠️ TESTNO NAROČILO' : ''}
+    `.trim();
+
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': BREVO_API_KEY,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: {
+            name: BREVO_SENDER_NAME,
+            email: BREVO_SENDER_EMAIL
+          },
+          to: [{ email: ORDER_NOTIFICATION_EMAIL }],
+          subject: `${IS_TEST_MODE ? '[TEST] ' : ''}Nova naročilnica - ${shippingInfo.firstName} ${shippingInfo.lastName}`,
+          textContent: emailContent
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send email notification:', await response.text());
+      } else {
+        console.log('Order notification email sent successfully');
+      }
+    } catch (err) {
+      console.error('Error sending email notification:', err);
+      // Don't block the checkout flow if email fails
+    }
+  };
+
   // Initialize Stripe
   useEffect(() => {
     if (!isConfigured) {
@@ -92,12 +180,14 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, total, onSucce
       return;
     }
 
-    // Validate that all cart items have price IDs
-    const itemsWithoutPriceId = cart.filter(item => !item.priceId);
-    if (itemsWithoutPriceId.length > 0) {
-      setError('Nekateri izdelki še nimajo nastavljenih cen v Stripe. Prosimo, kontaktirajte podporo.');
-      console.error('Items without priceId:', itemsWithoutPriceId);
-      return;
+    // Validate that all cart items have price IDs (skip in test mode since we use test price)
+    if (!IS_TEST_MODE) {
+      const itemsWithoutPriceId = cart.filter(item => !item.priceId);
+      if (itemsWithoutPriceId.length > 0) {
+        setError('Nekateri izdelki še nimajo nastavljenih cen v Stripe. Prosimo, kontaktirajte podporo.');
+        console.error('Items without priceId:', itemsWithoutPriceId);
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -105,11 +195,13 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, total, onSucce
 
     try {
       // Prepare cart items in the format expected by Cloudflare Worker
+      // In test mode, use the test price ID for all items
       const cartItems = cart.map(item => ({
-        priceId: item.priceId!,
+        priceId: IS_TEST_MODE ? TEST_PRICE_ID : item.priceId!,
         quantity: item.quantity
       }));
 
+      console.log('Test mode:', IS_TEST_MODE);
       console.log('Calling Cloudflare Worker:', CLOUDFLARE_WORKER_URL);
       console.log('Cart items:', cartItems);
 
@@ -130,6 +222,9 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, total, onSucce
       console.log('Session created:', session);
 
       if (session.id) {
+        // Send order notification email before redirecting to Stripe
+        await sendOrderNotificationEmail();
+        
         // Redirect to Stripe Checkout
         const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
         
@@ -196,6 +291,18 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, total, onSucce
 
           {step === 'shipping' ? (
             <form onSubmit={handleShippingSubmit} className="space-y-6">
+              {/* Test Mode Prefill Button */}
+              {IS_TEST_MODE && (
+                <button
+                  type="button"
+                  onClick={() => setShippingInfo(TEST_DATA)}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-amber-100 text-amber-800 font-medium text-sm border border-amber-300 hover:bg-amber-200 transition-colors"
+                >
+                  <Zap className="w-4 h-4" />
+                  Izpolni testne podatke (DEV)
+                </button>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1">Ime *</label>

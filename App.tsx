@@ -3,7 +3,6 @@ import { ShoppingCart, X, Trash2, Menu, Github, Twitter, CheckCircle, Filter } f
 import { Hero } from './components/Hero';
 import { ProductCard } from './components/ProductCard';
 import { CheckoutForm } from './components/CheckoutForm';
-import { HoneySommelier } from './components/HoneySommelier';
 import { OurStory } from './components/OurStory';
 import { PRODUCTS, TESTIMONIALS } from './constants';
 import { CartItem, Product, ViewState } from './types';
@@ -20,6 +19,22 @@ function App() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Handle URL-based routing (for Stripe redirects)
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/success') {
+      setView('success');
+      // Clear cart on successful payment
+      setCart([]);
+      localStorage.removeItem('goldenDropCart');
+      // Clean up URL without reload
+      window.history.replaceState({}, '', '/');
+    } else if (path === '/cancel') {
+      setView('home');
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
 
   // Persistent Cart
   useEffect(() => {
@@ -421,9 +436,6 @@ function App() {
 
       {renderFooter()}
       {renderCartDrawer()}
-      
-      {/* Only show AI Chat on home page */}
-      {view === 'home' && <HoneySommelier />}
     </div>
   );
 }
