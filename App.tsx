@@ -5,6 +5,7 @@ import { ProductCard } from './components/ProductCard';
 import { CheckoutForm } from './components/CheckoutForm';
 import { OurStory } from './components/OurStory';
 import { BlogList, BlogPostView } from './components/Blog';
+import { EmailPopup } from './components/EmailPopup';
 import { PRODUCTS, TESTIMONIALS } from './constants';
 import { CartItem, Product, ViewState, BlogPost } from './types';
 
@@ -449,6 +450,7 @@ function App() {
 
       {renderFooter()}
       {renderCartDrawer()}
+      <EmailPopup />
     </div>
   );
 }
