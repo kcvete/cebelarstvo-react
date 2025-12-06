@@ -32,6 +32,8 @@ const TEST_DATA: ShippingInfo = {
 
 interface CheckoutFormProps {
   cart: CartItem[];
+  subtotal: number;
+  shippingCost: number;
   total: number;
   onSuccess: () => void;
   onBack: () => void;
@@ -54,7 +56,7 @@ declare global {
   }
 }
 
-export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, total, onSuccess, onBack }) => {
+export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, subtotal, shippingCost, total, onSuccess, onBack }) => {
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
@@ -86,8 +88,12 @@ export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, total, onSucce
     }
 
     const orderItems = cart.map(item => 
-      `• ${item.name} x ${item.quantity} - ${(item.price * item.quantity).toFixed(2)} €`
+      `• ${item.name} (${item.weightLabel}) x ${item.quantity} - ${(item.price * item.quantity).toFixed(2)} €`
     ).join('\n');
+
+    const shippingLine = shippingCost > 0
+      ? `POŠTNINA: ${shippingCost.toFixed(2)} €`
+      : 'POŠTNINA: 0,00 € (prevzem na lokaciji ali akcija)';
 
     const emailContent = `
 Nova naročilnica - Čebelarstvo Tomaž
@@ -105,7 +111,9 @@ NAROČENI IZDELKI:
 -----------------
 ${orderItems}
 
-SKUPAJ: ${total.toFixed(2)} €
+${shippingLine}
+
+SKUPAJ ZA PLAČILO: ${total.toFixed(2)} € (izdelki ${subtotal.toFixed(2)} € + poštnina ${shippingCost.toFixed(2)} €)
 
 ---
 Naročilo oddano: ${new Date().toLocaleString('sl-SI')}
@@ -201,15 +209,28 @@ ${IS_TEST_MODE ? '⚠️ TESTNO NAROČILO' : ''}
         quantity: item.quantity
       }));
 
+      const payload: Record<string, any> = { cartItems };
+
+      if (shippingCost > 0) {
+        payload.shippingLineItem = {
+          amount: shippingCost,
+          currency: 'eur',
+          name: 'Poštnina'
+        };
+      }
+
       console.log('Test mode:', IS_TEST_MODE);
       console.log('Calling Cloudflare Worker:', CLOUDFLARE_WORKER_URL);
       console.log('Cart items:', cartItems);
+      if (payload.shippingLineItem) {
+        console.log('Including shipping line item:', payload.shippingLineItem);
+      }
 
       // Call Cloudflare Worker to create Stripe Checkout Session
       const response = await fetch(CLOUDFLARE_WORKER_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cartItems })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -435,11 +456,25 @@ ${IS_TEST_MODE ? '⚠️ TESTNO NAROČILO' : ''}
                 <p className="text-sm font-medium text-stone-700 mb-3">Vaše naročilo:</p>
                 <div className="space-y-2">
                   {cart.map(item => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span className="text-stone-600">{item.name} × {item.quantity}</span>
+                    <div key={`${item.id}-${item.weightLabel}`} className="flex justify-between text-sm">
+                        <span className="text-stone-600">{item.name} ({item.weightLabel}) × {item.quantity}</span>
                       <span className="text-stone-900 font-medium">{(item.price * item.quantity).toFixed(2)} €</span>
                     </div>
                   ))}
+                    <div className="border-t border-stone-200 pt-3 mt-3 space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-stone-600">Izdelki</span>
+                        <span className="text-stone-900 font-medium">{subtotal.toFixed(2)} €</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-600">Poštnina</span>
+                        <span className="text-stone-900 font-medium">{shippingCost.toFixed(2)} €</span>
+                      </div>
+                      <div className="flex justify-between text-base font-bold text-stone-900">
+                        <span>Skupaj</span>
+                        <span>{total.toFixed(2)} €</span>
+                      </div>
+                    </div>
                 </div>
               </div>
 

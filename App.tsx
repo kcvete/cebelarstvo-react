@@ -7,7 +7,7 @@ import { OurStory } from './components/OurStory';
 import { BlogList, BlogPostView } from './components/Blog';
 import { EmailPopup } from './components/EmailPopup';
 import { PRODUCTS, TESTIMONIALS } from './constants';
-import { CartItem, Product, ViewState, BlogPost } from './types';
+import { CartItem, Product, ViewState, BlogPost, HoneyWeight, ProductWeightOption } from './types';
 
 // Helper icon for testimonials - Defined outside to correctly type props including key support in JSX
 const StarIcon = ({ filled }: { filled: boolean }) => (
@@ -16,7 +16,29 @@ const StarIcon = ({ filled }: { filled: boolean }) => (
   </svg>
 );
 
+const calculateShippingCost = (totalWeightGrams: number) => {
+  if (totalWeightGrams === 0) return 0;
+  if (totalWeightGrams <= 500) return 2.9;
+  if (totalWeightGrams <= 2000) return 4.5;
+  if (totalWeightGrams <= 5000) return 5.8;
+  if (totalWeightGrams <= 10000) return 6.9;
+  return 11.9;
+};
+
+const getItemWeight = (item: CartItem) => item.selectedWeight || item.defaultWeight || HoneyWeight.G900;
+
+const normalizeCartItem = (item: any): CartItem => {
+  const normalizedWeight: HoneyWeight = item.selectedWeight || item.defaultWeight || HoneyWeight.G900;
+  return {
+    ...item,
+    selectedWeight: normalizedWeight,
+    weightLabel: item.weightLabel || `${normalizedWeight} g`,
+    price: typeof item.price === 'number' ? item.price : Number(item.price) || 0,
+  };
+};
+
 function App() {
+  const BLOG_ENABLED = false;
   const [view, setView] = useState<ViewState>('home');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -44,7 +66,8 @@ function App() {
     const savedCart = localStorage.getItem('goldenDropCart');
     if (savedCart) {
       try {
-        setCart(JSON.parse(savedCart));
+        const parsed: CartItem[] = JSON.parse(savedCart);
+        setCart(parsed.map(normalizeCartItem));
       } catch (e) {
         console.error("Failed to parse cart", e);
       }
@@ -76,26 +99,44 @@ function App() {
     );
   };
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, weightOption?: ProductWeightOption) => {
+    const fallbackOption = weightOption || product.weights?.[0];
+    if (!fallbackOption) {
+      console.warn('No weight options defined for product', product.id);
+      return;
+    }
+
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find(item => item.id === product.id && item.selectedWeight === fallbackOption.weight);
       if (existing) {
         return prev.map(item =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === product.id && item.selectedWeight === fallbackOption.weight
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [
+        ...prev,
+        {
+          ...product,
+          price: fallbackOption.price,
+          priceId: fallbackOption.priceId || product.priceId,
+          selectedWeight: fallbackOption.weight,
+          weightLabel: fallbackOption.label,
+          quantity: 1
+        }
+      ];
     });
     setIsCartOpen(true);
   };
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+  const removeFromCart = (productId: string, weight: HoneyWeight) => {
+    setCart(prev => prev.filter(item => !(item.id === productId && item.selectedWeight === weight)));
   };
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = (productId: string, weight: HoneyWeight, delta: number) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
+      if (item.id === productId && item.selectedWeight === weight) {
         const newQty = item.quantity + delta;
         return newQty > 0 ? { ...item, quantity: newQty } : item;
       }
@@ -103,9 +144,17 @@ function App() {
     }));
   };
 
-  const cartTotal = useMemo(() => {
+  const cartSubtotal = useMemo(() => {
     return cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   }, [cart]);
+
+  const totalWeightGrams = useMemo(() => {
+    return cart.reduce((acc, item) => acc + (getItemWeight(item) * item.quantity), 0);
+  }, [cart]);
+
+  const shippingCost = useMemo(() => calculateShippingCost(totalWeightGrams), [totalWeightGrams]);
+
+  const cartTotal = useMemo(() => cartSubtotal + shippingCost, [cartSubtotal, shippingCost]);
 
   const handleCheckoutSuccess = () => {
     setCart([]);
@@ -132,7 +181,9 @@ function App() {
           <nav className="hidden md:flex gap-6 text-sm font-medium text-stone-600">
             <button onClick={() => { setView('home'); setTimeout(scrollToProducts, 100); }} className="hover:text-gold-600 transition-colors">Trgovina</button>
             <button onClick={() => { setView('story'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Naša zgodba</button>
-            <button onClick={() => { setView('blog'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Blog</button>
+            {BLOG_ENABLED && (
+              <button onClick={() => { setView('blog'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Blog</button>
+            )}
           </nav>
 
           <button
@@ -192,7 +243,7 @@ function App() {
                     <a href="#" aria-label="Instagram" className="hover:text-gold-500"><Twitter className="w-5 h-5 cursor-pointer" /></a>
                 </div>
                 <p className="text-sm text-stone-400 mt-4">
-                    Dostava po vsej Sloveniji.<br/>Brezplačna poštnina nad 50 €.
+                    Dostava po vsej Sloveniji.<br/>Brezplačna poštnina nad 70 €.
                 </p>
             </div>
         </div>
@@ -238,7 +289,7 @@ function App() {
             </div>
           ) : (
             cart.map(item => (
-              <div key={item.id} className="flex gap-4">
+              <div key={`${item.id}-${item.selectedWeight}`} className="flex gap-4">
                 <div className="w-20 h-20 flex-shrink-0 bg-stone-100 rounded-lg overflow-hidden">
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                 </div>
@@ -247,21 +298,21 @@ function App() {
                     <h3 className="font-medium text-stone-900">{item.name}</h3>
                     <p className="font-bold text-gold-700">{(item.price * item.quantity).toFixed(2)} €</p>
                   </div>
-                  <p className="text-sm text-stone-500">{item.tags[0]}</p>
+                  <p className="text-sm text-stone-500">{item.weightLabel}</p>
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center border border-stone-200 rounded-lg">
                         <button 
-                            onClick={() => updateQuantity(item.id, -1)}
+                            onClick={() => updateQuantity(item.id, item.selectedWeight, -1)}
                             className="px-2 py-1 hover:bg-stone-50 text-stone-600"
                         >-</button>
                         <span className="px-2 text-sm font-medium w-8 text-center">{item.quantity}</span>
                         <button 
-                            onClick={() => updateQuantity(item.id, 1)}
+                            onClick={() => updateQuantity(item.id, item.selectedWeight, 1)}
                             className="px-2 py-1 hover:bg-stone-50 text-stone-600"
                         >+</button>
                     </div>
                     <button 
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item.id, item.selectedWeight)}
                         className="text-stone-400 hover:text-red-500 transition-colors"
                     >
                         <Trash2 className="w-4 h-4" />
@@ -275,11 +326,21 @@ function App() {
 
         {cart.length > 0 && (
           <div className="p-6 bg-stone-50 border-t border-stone-100">
-            <div className="flex justify-between mb-4">
-              <span className="text-stone-600">Vmesni znesek</span>
-              <span className="font-bold text-xl text-stone-900">{cartTotal.toFixed(2)} €</span>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-stone-600">Izdelki</span>
+                <span className="font-semibold">{cartSubtotal.toFixed(2)} €</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-stone-600">Poštnina</span>
+                  <span className="font-semibold">{shippingCost.toFixed(2)} €</span>
+              </div>
+              <div className="flex justify-between border-t border-stone-200 pt-2 text-base">
+                <span className="font-semibold text-stone-700">Skupaj</span>
+                <span className="font-bold text-stone-900">{cartTotal.toFixed(2)} €</span>
+              </div>
             </div>
-            <p className="text-xs text-stone-500 mb-4 text-center">Poštnina in davki se izračunajo pri zaključku nakupa</p>
+            <p className="text-xs text-stone-500 mt-3 text-center">Poštnina se izračuna glede na skupno težo naročila.</p>
             <button
               onClick={() => {
                 setIsCartOpen(false);
@@ -429,18 +490,20 @@ function App() {
         {view === 'checkout' && (
           <CheckoutForm 
             cart={cart}
+            subtotal={cartSubtotal}
+            shippingCost={shippingCost}
             total={cartTotal} 
             onSuccess={handleCheckoutSuccess}
             onBack={() => setView('home')}
           />
         )}
         {view === 'success' && renderSuccess()}
-        {view === 'blog' && (
+        {BLOG_ENABLED && view === 'blog' && (
           <BlogList 
             onSelectPost={(post) => { setSelectedBlogPost(post); setView('blogPost'); window.scrollTo(0, 0); }}
           />
         )}
-        {view === 'blogPost' && selectedBlogPost && (
+        {BLOG_ENABLED && view === 'blogPost' && selectedBlogPost && (
           <BlogPostView 
             post={selectedBlogPost}
             onBack={() => { setView('blog'); window.scrollTo(0, 0); }}
@@ -450,7 +513,7 @@ function App() {
 
       {renderFooter()}
       {renderCartDrawer()}
-      <EmailPopup />
+      {view === 'home' && <EmailPopup />}
     </div>
   );
 }

@@ -1,13 +1,36 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Plus, Star } from 'lucide-react';
-import { Product } from '../types';
+import { Product, ProductWeightOption, HoneyWeight } from '../types';
 
 interface ProductCardProps {
   product: Product;
-  onAdd: (product: Product) => void;
+  onAdd: (product: Product, weight: ProductWeightOption) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd }) => {
+  const weightOptions = useMemo<ProductWeightOption[]>(() => {
+    if (product.weights && product.weights.length > 0) {
+      return product.weights;
+    }
+    const fallbackWeight = product.defaultWeight ?? HoneyWeight.G900;
+    return [
+      {
+        weight: fallbackWeight,
+        label: `${fallbackWeight} g`,
+        price: product.price,
+        priceId: product.priceId
+      }
+    ];
+  }, [product]);
+
+  const [selectedWeight, setSelectedWeight] = useState<ProductWeightOption>(weightOptions[0]);
+
+  useEffect(() => {
+    setSelectedWeight(weightOptions[0]);
+  }, [weightOptions]);
+
+  const currentPrice = selectedWeight?.price ?? product.price;
+
   return (
     <div
       className={`group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-stone-100 flex flex-col h-full overflow-hidden ${
@@ -42,7 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd }) => {
                     <p className="text-sm text-stone-400 line-through">{product.previousPrice.toFixed(2)} €</p>
                   )}
                   <p className={`text-lg font-semibold ${product.previousPrice ? 'text-red-600' : 'text-gold-700'}`}>
-                    {product.price.toFixed(2)} €
+                    {currentPrice.toFixed(2)} €
                   </p>
                   {product.previousPrice && (
                     <p className="text-xs font-bold text-red-600">
@@ -58,12 +81,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAdd }) => {
                     </span>
                 ))}
             </div>
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Velikost kozarca</p>
+              <div className="mt-2 flex gap-2 flex-wrap">
+                {weightOptions.map(option => (
+                  <button
+                    key={option.weight}
+                    type="button"
+                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                      selectedWeight?.weight === option.weight
+                        ? 'bg-stone-900 text-white border-stone-900'
+                        : 'bg-white text-stone-600 border-stone-200 hover:border-gold-400'
+                    }`}
+                    onClick={() => setSelectedWeight(option)}
+                    disabled={product.soldOut}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <p className="mt-3 text-sm text-stone-500 leading-relaxed">
                 {product.description}
             </p>
         </div>
         <button
-          onClick={() => onAdd(product)}
+          onClick={() => selectedWeight && onAdd(product, selectedWeight)}
           disabled={product.soldOut}
           className={`mt-6 w-full flex items-center justify-center rounded-lg border border-transparent px-4 py-3 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-offset-2 ${
             product.soldOut

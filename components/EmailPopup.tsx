@@ -4,8 +4,8 @@ import { X, Mail, Gift, Copy, Check } from 'lucide-react';
 const COOKIE_NAME = 'goldendrop_email_popup';
 const COOKIE_DAYS = 365;
 
-// TODO: Replace with your actual Cloudflare Worker URL
-const WORKER_URL = 'YOUR_CLOUDFLARE_WORKER_URL_HERE';
+// Read Brevo worker URL from Vite env, fall back to placeholder
+const WORKER_URL = import.meta.env.VITE_CLOUDFLARE_BREVO_WORKER_URL;
 
 const setCookie = (name: string, value: string, days: number) => {
   const expires = new Date();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Leaf, Award, Users, MapPin, Calendar } from 'lucide-react';
+import { Heart, Leaf, Users, MapPin, Calendar, ShieldCheck } from 'lucide-react';
 
 interface OurStoryProps {
   onShopClick: () => void;
@@ -14,19 +14,25 @@ export const OurStory: React.FC<OurStoryProps> = ({ onShopClick }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl font-bold text-stone-900 font-serif sm:text-5xl mb-6">
-                Naša zgodba
+                Dobrodošli pri Čebelarju Tomažu 🐝🍯
               </h1>
+              <p className="text-xl text-stone-600 leading-relaxed mb-4">
+                Pozdravljeni na naši spletni strani! Veseli smo, da ste se ustavili v našem čebelarskem kotičku, kjer skrbimo za čebele z veliko predanosti in ljubezni do narave.
+              </p>
+              <p className="text-xl text-stone-600 leading-relaxed mb-4">
+                Za naše čebelice skrbiva Tomaž in Aneja, tata in hči. Brez podpore družine ne gre, zato z nami stojijo mami Barbara ter sestri Toja in Sara. Skupaj skrbimo za približno 60 čebeljih družin, ki živijo v naravnem okolju, obdanem s travniki, gozdovi in cvetlicami.
+              </p>
               <p className="text-xl text-stone-600 leading-relaxed mb-8">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.
+                Pri svojem delu ne iščemo bližnjic – vsak dan ustvarjamo pogoje, v katerih se čebele počutijo varno, zdravo in močno.
               </p>
               <div className="flex items-center gap-4 text-stone-500">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-gold-600" />
-                  <span>Vipavska dolina</span>
+                  <span>Banjška planota & Vipavska dolina</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-gold-600" />
-                  <span>Od leta 2010</span>
+                  <span>60 čebeljih družin</span>
                 </div>
               </div>
             </div>
@@ -50,21 +56,31 @@ export const OurStory: React.FC<OurStoryProps> = ({ onShopClick }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-stone-900 font-serif sm:text-4xl mb-4">
-              Naše vrednote
+              Naša načela čebelarjenja
             </h2>
             <p className="text-lg text-stone-500 max-w-2xl mx-auto">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.
+              Verjamemo, da je kakovosten med rezultat spoštovanja narave in čebel, zato vsako odločitev sprejmemo z mislijo na njihovo dobrobit.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center p-8 bg-stone-50 rounded-2xl hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Heart className="w-8 h-8 text-gold-600" />
               </div>
-              <h3 className="text-xl font-bold text-stone-900 mb-4">Strast do čebelarstva</h3>
+              <h3 className="text-xl font-bold text-stone-900 mb-4">Ekološki pristop</h3>
               <p className="text-stone-500">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.
+                Med pridelujemo brez uporabe škodljivih kemičnih pripravkov in se zanašamo na naravne cikle.
+              </p>
+            </div>
+
+            <div className="text-center p-8 bg-stone-50 rounded-2xl hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck className="w-8 h-8 text-gold-600" />
+              </div>
+              <h3 className="text-xl font-bold text-stone-900 mb-4">Brez sistemskih zdravil</h3>
+              <p className="text-stone-500">
+                Varojo obvladujemo z apitehničnimi ukrepi in naravnimi metodami, da med ostane čist in pristen.
               </p>
             </div>
 
@@ -72,19 +88,19 @@ export const OurStory: React.FC<OurStoryProps> = ({ onShopClick }) => {
               <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Leaf className="w-8 h-8 text-gold-600" />
               </div>
-              <h3 className="text-xl font-bold text-stone-900 mb-4">Trajnostno čebelarjenje</h3>
+              <h3 className="text-xl font-bold text-stone-900 mb-4">Skrb za naravo</h3>
               <p className="text-stone-500">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.
+                Čebele niso le vir medu, temveč ključne opraševalke. Zdravje čebel pomeni zdravje našega okolja.
               </p>
             </div>
 
             <div className="text-center p-8 bg-stone-50 rounded-2xl hover:shadow-lg transition-shadow">
               <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Award className="w-8 h-8 text-gold-600" />
+                <Users className="w-8 h-8 text-gold-600" />
               </div>
-              <h3 className="text-xl font-bold text-stone-900 mb-4">Vrhunska kakovost</h3>
+              <h3 className="text-xl font-bold text-stone-900 mb-4">Družinsko delo</h3>
               <p className="text-stone-500">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.
+                V delo vključujemo celotno družino, saj se skrb za čebele prenaša iz roda v rod skupaj s toplino in znanjem.
               </p>
             </div>
           </div>
@@ -108,18 +124,18 @@ export const OurStory: React.FC<OurStoryProps> = ({ onShopClick }) => {
             <div className="flex flex-col md:flex-row gap-8 items-center">
               <div className="md:w-1/2">
                 <img
-                  src="https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&q=80&w=600"
+                  src="./zacetki-cebelarstva.jpg"
                   alt="Začetki čebelarstva"
                   className="rounded-xl shadow-lg w-full h-64 object-cover"
                 />
               </div>
               <div className="md:w-1/2">
                 <div className="inline-block bg-gold-500 text-white px-4 py-1 rounded-full text-sm font-bold mb-4">
-                  2010
+                  2020
                 </div>
-                <h3 className="text-2xl font-bold text-stone-900 mb-4">Začetek zgodbe</h3>
+                <h3 className="text-2xl font-bold text-stone-900 mb-4">Začetek družinske zgodbe</h3>
                 <p className="text-stone-600 leading-relaxed">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                  Začeli smo z nekaj panji in veliko radovednosti. Hitro smo ugotovili, da je čebelarstvo več kot hobi – je način življenja in priložnost, da čebelam vrnemo, kar nam dajejo.
                 </p>
               </div>
             </div>
@@ -137,9 +153,9 @@ export const OurStory: React.FC<OurStoryProps> = ({ onShopClick }) => {
                 <div className="inline-block bg-gold-500 text-white px-4 py-1 rounded-full text-sm font-bold mb-4">
                   2015
                 </div>
-                <h3 className="text-2xl font-bold text-stone-900 mb-4">Širitev na Banjško planoto</h3>
+                <h3 className="text-2xl font-bold text-stone-900 mb-4">Skrb za 60 čebeljih družin</h3>
                 <p className="text-stone-600 leading-relaxed">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                  Postopoma smo razširili stojišča na travnike in gozdne jasnine ter uvedli apitehnične ukrepe, ki podpirajo naravni razvoj čebel brez sistemskih zdravil.
                 </p>
               </div>
             </div>
@@ -157,9 +173,9 @@ export const OurStory: React.FC<OurStoryProps> = ({ onShopClick }) => {
                 <div className="inline-block bg-gold-500 text-white px-4 py-1 rounded-full text-sm font-bold mb-4">
                   2023
                 </div>
-                <h3 className="text-2xl font-bold text-stone-900 mb-4">Spletna trgovina</h3>
+                <h3 className="text-2xl font-bold text-stone-900 mb-4">Delimo zgodbo naprej</h3>
                 <p className="text-stone-600 leading-relaxed">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+                  Danes svoj med in zgodbe delimo tudi na spletu, da ljubiteljem narave približamo delo čebelarjev in okus neokrnjene Banjške planote.
                 </p>
               </div>
             </div>
@@ -176,10 +192,13 @@ export const OurStory: React.FC<OurStoryProps> = ({ onShopClick }) => {
                 Družinsko čebelarstvo
               </h2>
               <p className="text-lg text-stone-600 leading-relaxed mb-6">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                Naše čebele nam vsako leto podarijo različne vrste medu – od cvetličnega in lipovega pa do bogatega gozdnega medu. Pripravljamo tudi druge čebelje izdelke, vedno z mislijo na naravno kakovost in dobro počutje naših strank.
+              </p>
+              <p className="text-lg text-stone-600 leading-relaxed mb-6">
+                Ker pri nas med ni le sladilo, ampak zgodba sodelovanja človeka in narave, vsak kozarec odraža naš trud, znanje ter predanost čebelam. Izberete nas, ker si želite pristnega okusa in trajnostnega pristopa.
               </p>
               <p className="text-lg text-stone-600 leading-relaxed mb-8">
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                Pri Čebelarju Tomažu skrbimo za 60 čebeljih družin v čistem naravnem okolju. Naše poslanstvo je pridelava medu brez uporabe strupov in sistemskih zdravil, saj verjamemo, da si čebele in ljudje zaslužimo le najboljše. 🐝🍯
               </p>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">

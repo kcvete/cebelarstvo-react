@@ -1,4 +1,22 @@
-import { Product } from './types';
+import { Product, HoneyWeight } from './types';
+
+const DEFAULT_WEIGHT = HoneyWeight.G900;
+const WEIGHT_ORDER: HoneyWeight[] = [HoneyWeight.G900, HoneyWeight.G450, HoneyWeight.G250];
+
+const formatWeightLabel = (weight: HoneyWeight) => `${weight} g`;
+
+const roundPrice = (value: number) => Number(value.toFixed(2));
+
+const buildWeightOptions = (
+  basePrice: number,
+  priceIds: Partial<Record<HoneyWeight, string>> = {}
+) =>
+  WEIGHT_ORDER.map(weight => ({
+    weight,
+    label: formatWeightLabel(weight),
+    price: roundPrice(basePrice * (weight / DEFAULT_WEIGHT)),
+    priceId: priceIds[weight]
+  }));
 
 export const SITE_NAME = 'Čebelarstvo Tomaž';
 export const STRIPE_KEY = process.env.STRIPE_PUBLISHABLE_KEY || '';
@@ -13,7 +31,13 @@ export const PRODUCTS: Product[] = [
       tags: ['Naravni', 'Aromatičen', 'Slovenski'],
       rating: 4.9,
       reviews: 128,
-      priceId: 'price_1SWOBhI5iqAVuGDVcHriXpGk' // Replace with your actual Stripe Price ID
+      priceId: 'price_1SWOBhI5iqAVuGDVcHriXpGk', // 900 g Stripe Price ID
+      defaultWeight: HoneyWeight.G900,
+      weights: buildWeightOptions(12, {
+        [HoneyWeight.G900]: 'price_1SWOBhI5iqAVuGDVcHriXpGk',
+        [HoneyWeight.G450]: 'price_cvetlicni_450', // TODO: replace with actual Stripe Price ID
+        [HoneyWeight.G250]: 'price_cvetlicni_250' // TODO: replace with actual Stripe Price ID
+      })
     },
     {
       id: 'lipov',
@@ -25,19 +49,49 @@ export const PRODUCTS: Product[] = [
       tags: ['Lipa', 'Svež', 'Slovenski'],
       rating: 4.8,
       reviews: 210,
-      priceId: 'price_1SWMxhI5iqAVuGDVZixLNmLi' // Replace with your actual Stripe Price ID
+      priceId: 'price_1SWMxhI5iqAVuGDVZixLNmLi',
+      defaultWeight: HoneyWeight.G900,
+      weights: buildWeightOptions(12, {
+        [HoneyWeight.G900]: 'price_1SWMxhI5iqAVuGDVZixLNmLi',
+        [HoneyWeight.G450]: 'price_lipov_450', // TODO: replace with actual Stripe Price ID
+        [HoneyWeight.G250]: 'price_lipov_250' // TODO: replace with actual Stripe Price ID
+      })
     },
     {
       id: 'hojev',
       name: 'Hojev med',
       price: 15.00,
       description: 'Hojev med je znan po svoji intenzivni aromi in temni barvi. Trenutno ni na zalogi.',
-      image: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&q=80&w=800',
+      image: './hojev-store.png',
       tags: ['Hoja', 'Intenziven', 'Slovenski', 'Ni na zalogi'],
       rating: 4.7,
       reviews: 85,
-      soldOut: true,
-      priceId: 'price_hojev_med' // Replace with your actual Stripe Price ID
+      soldOut: false,
+      priceId: 'price_hojev_med',
+      defaultWeight: HoneyWeight.G900,
+      weights: buildWeightOptions(15, {
+        [HoneyWeight.G900]: 'price_hojev_med',
+        [HoneyWeight.G450]: 'price_hojev_450', // TODO: replace
+        [HoneyWeight.G250]: 'price_hojev_250' // TODO: replace
+      })
+    },
+        {
+      id: 'satje',
+      name: 'Satje v medu',
+      price: 7.00,
+      description: 'Hojev med je znan po svoji intenzivni aromi in temni barvi. Trenutno ni na zalogi.',
+      image: './satje.png',
+      tags: ['Satje', 'Intenziven', 'Slovenski', 'Ni na zalogi'],
+      rating: 4.7,
+      reviews: 85,
+      soldOut: false,
+      priceId: 'price_satje_v_medu',
+      defaultWeight: HoneyWeight.G900,
+      weights: buildWeightOptions(7, {
+        [HoneyWeight.G900]: 'price_satje_v_medu',
+        [HoneyWeight.G450]: 'price_satje_450',
+        [HoneyWeight.G250]: 'price_satje_250'
+      })
     }
   ];
 

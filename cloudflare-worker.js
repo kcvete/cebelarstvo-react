@@ -28,7 +28,7 @@ export default {
     if (request.method === "POST") {
       try {
         // 2. Get the cart items sent from your website
-        const { cartItems } = await request.json();
+        const { cartItems, shippingLineItem } = await request.json();
 
         // Validate cart
         if (!cartItems || cartItems.length === 0) {
@@ -62,6 +62,24 @@ export default {
           body.append(`line_items[${index}][price]`, item.priceId);
           body.append(`line_items[${index}][quantity]`, item.quantity);
         });
+
+        if (shippingLineItem && shippingLineItem.amount) {
+          const shippingIndex = cartItems.length;
+          const currency = (shippingLineItem.currency || 'eur').toLowerCase();
+          const unitAmount = Math.round(Number(shippingLineItem.amount) * 100);
+
+          if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
+            return new Response(
+              JSON.stringify({ error: 'Invalid shipping amount' }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+
+          body.append(`line_items[${shippingIndex}][price_data][currency]`, currency);
+          body.append(`line_items[${shippingIndex}][price_data][unit_amount]`, unitAmount.toString());
+          body.append(`line_items[${shippingIndex}][price_data][product_data][name]`, shippingLineItem.name || 'Poštnina');
+          body.append(`line_items[${shippingIndex}][quantity]`, '1');
+        }
 
         // 4. Call Stripe API directly
         const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {

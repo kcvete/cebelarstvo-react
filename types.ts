@@ -1,7 +1,20 @@
+export enum HoneyWeight {
+  G250 = 250,
+  G450 = 450,
+  G900 = 900,
+}
+
+export interface ProductWeightOption {
+  weight: HoneyWeight;
+  label: string;
+  price: number;
+  priceId?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
-  price: number;
+  price: number; // Base price for default (900 g) jar
   previousPrice?: number;
   description: string;
   image: string;
@@ -9,11 +22,15 @@ export interface Product {
   rating: number;
   reviews: number;
   soldOut?: boolean;
-  priceId?: string; // Stripe Price ID for Checkout Sessions
+  priceId?: string; // Default Stripe Price ID (900 g)
+  weights?: ProductWeightOption[];
+  defaultWeight?: HoneyWeight;
 }
 
 export interface CartItem extends Product {
   quantity: number;
+  selectedWeight: HoneyWeight;
+  weightLabel: string;
 }
 
 export interface ChatMessage {
