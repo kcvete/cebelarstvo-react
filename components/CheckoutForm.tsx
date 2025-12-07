@@ -37,6 +37,7 @@ interface CheckoutFormProps {
   total: number;
   onSuccess: () => void;
   onBack: () => void;
+  onShowTerms: () => void;
 }
 
 interface ShippingInfo {
@@ -56,7 +57,15 @@ declare global {
   }
 }
 
-export const CheckoutForm: React.FC<CheckoutFormProps> = ({ cart, subtotal, shippingCost, total, onSuccess, onBack }) => {
+export const CheckoutForm: React.FC<CheckoutFormProps> = ({
+  cart,
+  subtotal,
+  shippingCost,
+  total,
+  onSuccess,
+  onBack,
+  onShowTerms
+}) => {
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
@@ -500,6 +509,18 @@ ${IS_TEST_MODE ? '⚠️ TESTNO NAROČILO' : ''}
               >
                 {isProcessing ? 'Preusmerjanje...' : `Nadaljuj na plačilo (${total.toFixed(2)} €)`}
               </button>
+
+              <p className="text-xs text-stone-500 text-center">
+                Z oddajo naročila potrjujete seznanjenost s{' '}
+                <button
+                  type="button"
+                  onClick={onShowTerms}
+                  className="text-gold-600 underline underline-offset-2 font-medium"
+                >
+                  Pogoji poslovanja in Politiko zasebnosti
+                </button>
+                .
+              </p>
             </form>
           )}
         </div>

@@ -5,6 +5,9 @@ import { ProductCard } from './components/ProductCard';
 import { CheckoutForm } from './components/CheckoutForm';
 import { OurStory } from './components/OurStory';
 import { BlogList, BlogPostView } from './components/Blog';
+import { Contact } from './components/Contact';
+import { Terms } from './components/Terms';
+import { Cookies } from './components/Cookies';
 import { EmailPopup } from './components/EmailPopup';
 import { PRODUCTS, TESTIMONIALS } from './constants';
 import { CartItem, Product, ViewState, BlogPost, HoneyWeight, ProductWeightOption } from './types';
@@ -181,6 +184,7 @@ function App() {
           <nav className="hidden md:flex gap-6 text-sm font-medium text-stone-600">
             <button onClick={() => { setView('home'); setTimeout(scrollToProducts, 100); }} className="hover:text-gold-600 transition-colors">Trgovina</button>
             <button onClick={() => { setView('story'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Naša zgodba</button>
+            <button onClick={() => { setView('contact'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Kontakt</button>
             {BLOG_ENABLED && (
               <button onClick={() => { setView('blog'); window.scrollTo(0, 0); }} className="hover:text-gold-600 transition-colors">Blog</button>
             )}
@@ -233,7 +237,9 @@ function App() {
                 <ul className="space-y-2 text-sm">
                     <li><button onClick={() => { setView('story'); window.scrollTo(0, 0); }} className="hover:text-gold-500">Naša zgodba</button></li>
                     <li><a href="#" className="hover:text-gold-500">Trajnostno čebelarjenje</a></li>
-                    <li><a href="#" className="hover:text-gold-500">Kontakt</a></li>
+                    <li><button onClick={() => { setView('contact'); window.scrollTo(0, 0); }} className="hover:text-gold-500">Kontakt</button></li>
+                    <li><button onClick={() => { setView('terms'); window.scrollTo(0, 0); }} className="hover:text-gold-500">Pogoji uporabe</button></li>
+                    <li><button onClick={() => { setView('cookies'); window.scrollTo(0, 0); }} className="hover:text-gold-500">Piškotki</button></li>
                 </ul>
             </div>
             <div>
@@ -495,8 +501,12 @@ function App() {
             total={cartTotal} 
             onSuccess={handleCheckoutSuccess}
             onBack={() => setView('home')}
+            onShowTerms={() => setView('terms')}
           />
         )}
+        {view === 'contact' && <Contact />}
+        {view === 'terms' && <Terms />}
+        {view === 'cookies' && <Cookies />}
         {view === 'success' && renderSuccess()}
         {BLOG_ENABLED && view === 'blog' && (
           <BlogList 

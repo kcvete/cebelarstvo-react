@@ -50,4 +50,13 @@ export interface BlogPost {
   readTime: string;
 }
 
-export type ViewState = 'home' | 'checkout' | 'success' | 'story' | 'blog' | 'blogPost';
+export type ViewState =
+  | 'home'
+  | 'checkout'
+  | 'success'
+  | 'story'
+  | 'blog'
+  | 'blogPost'
+  | 'contact'
+  | 'terms'
+  | 'cookies';
